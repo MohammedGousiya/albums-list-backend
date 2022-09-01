@@ -1,0 +1,42 @@
+version: "3.7"
+
+volumes:
+ mysql_data:
+   driver: local
+
+services:
+  mysql:
+    container_name: spotify-mysql
+    image: mysql
+    restart: always
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/scripts:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    ports:
+      - 4000:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: spotify
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+  app:
+    container_name: spotify-backend
+    restart: always
+    build: .
+    ports:
+      - 3001:3001
+    dns:
+      - 8.8.8.8
+    networks:
+      - app-network
+    links:
+      - mysql
+    depends_on:
+      - mysql
+    environment:
+      - NODE_ENV=production
+networks:
+  app-network:
+    driver: bridge
